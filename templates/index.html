@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IMDB SQL Interface</title>
+</head>
+<body>
+    <h1>IMDB SQL Interface</h1>
+    <form id="sql-form">
+        <textarea name="query" rows="13" cols="50" placeholder="Enter your SQL query here..."></textarea><br>
+        <input type="submit" value="Execute SQL">
+    </form>
+    <div id="result">
+        <!-- Query results will be displayed here -->
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        (function($) { // IIFE to encapsulate code and avoid global pollution
+            'use strict'; // Use strict mode
+
+            // Element selectors
+            const FORM_SELECTOR = '#sql-form';
+            const RESULT_SELECTOR = '#result';
+
+            $(document).ready(() => {
+                $(FORM_SELECTOR).submit(onFormSubmit);
+            });
+
+            function onFormSubmit(event) {
+                event.preventDefault();
+                
+                $.ajax({
+                    type: 'POST',
+                    url: '/execute_sql',
+                    data: $(this).serialize(),
+                    success: handleAjaxSuccess
+                });
+            }
+
+            function handleAjaxSuccess(response) {
+                let content;
+
+                if ('data' in response) {
+                    content = buildTable(response);
+                } else if ('message' in response) {
+                    content = `<p>${response.message}</p>`;
+                }
+
+                $(RESULT_SELECTOR).html(content);
+            }
+
+            function buildTable(response) {
+                let tableHeader = response.columns.map(column => `<th>${column}</th>`).join('');
+                let tableRows = response.data.map(row => {
+                    let rowData = row.map(value => `<td>${value}</td>`).join('');
+                    return `<tr>${rowData}</tr>`;
+                }).join('');
+
+                return `<table border="1"><tr>${tableHeader}</tr>${tableRows}</table>`;
+            }
+
+        })(jQuery);
+    </script>
+
+</body>
+</html>

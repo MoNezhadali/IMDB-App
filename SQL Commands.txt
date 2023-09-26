@@ -1,0 +1,14 @@
+a)
+
+b)
+
+c)
+
+SELECT d.name, top_directors.avg_score FROM directors d
+JOIN (
+    SELECT director_id, AVG(vote_average) AS avg_score
+    FROM movies
+    GROUP BY director_id
+    ORDER BY avg_score DESC
+    LIMIT 5
+) AS top_directors ON d.id = top_directors.director_id;
