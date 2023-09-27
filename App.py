@@ -27,10 +27,13 @@ def execute_query(query):
         result = cursor.fetchall()
         column_names = [desc[0] for desc in cursor.description]
         cursor.close() # best practice
+        connection.close()
         return {'data': result, 'columns': column_names}
     else:
         connection.commit()
+        cursor.close()
+        connection.close()
         return {'message': 'Query executed successfully.'}
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=8080)

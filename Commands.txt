@@ -1,3 +1,6 @@
+1.
+
+
 a)
 
 b)
@@ -12,3 +15,14 @@ JOIN (
     ORDER BY avg_score DESC
     LIMIT 5
 ) AS top_directors ON d.id = top_directors.director_id;
+
+2.
+
+a)
+http://localhost:5000/api/movies
+b)
+http://localhost:5000/api/directors
+c)
+http://localhost:5000/api/movies?director_name=Nolan
+d)
+http://localhost:5000/api/movies?director_name=Nolan&sort_by=title
