@@ -33,7 +33,8 @@
                     type: 'POST',
                     url: '/execute_sql',
                     data: $(this).serialize(),
-                    success: handleAjaxSuccess
+                    success: handleAjaxSuccess,
+                    error: handleAjaxError  // Handle AJAX request errors
                 });
             }
 
@@ -44,8 +45,20 @@
                     content = buildTable(response);
                 } else if ('message' in response) {
                     content = `<p>${response.message}</p>`;
+                } else {
+                    // Unexpected response format
+                    content = '<p>Unexpected server response.</p>';
                 }
 
+                $(RESULT_SELECTOR).html(content);
+            }
+
+            function handleAjaxError(jqXHR, textStatus, errorThrown) {
+                // Handle any client-side or network errors
+                let content = '<p>Incorrect or unexpected SQL request</p>';
+                if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                    content = `<p>${jqXHR.responseJSON.message}</p>`;
+                }
                 $(RESULT_SELECTOR).html(content);
             }
 
@@ -60,6 +73,7 @@
             }
 
         })(jQuery);
+
     </script>
 
 </body>
