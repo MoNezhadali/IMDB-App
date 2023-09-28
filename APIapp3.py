@@ -1,16 +1,19 @@
 # Python libraries
-import os, json, sqlite3
+import os, sqlite3
 # Site-packages
 from flask import Flask, jsonify, request
 
+# Make the app
 app = Flask(__name__)
 
-# Exceptions
+# Define the Exceptions
 class UnknownArgumentException(Exception):
     pass
 
 class NoSuchColumnException(Exception):
     pass
+
+
 
 # Define the sqlite database file
 DATABASE = os.path.abspath(os.path.join(os.path.dirname(__file__),'movie.sqlite'))
@@ -51,31 +54,43 @@ def get_movies():
 
     # Apply sorting
     if sort_by:
+        if sort_by=='movie_title':
+            sort_by='title'
         if sort_by=='director_name':
             sort_by='d.name'
         query += f" ORDER BY {sort_by}"
-    
     query += ';'
+
     # Send the query to the execute_query function
     result = execute_API_query(query)
-    return jsonify(result)
+    
+    # Send the API call response
+    return jsonify({"status": 200, "result": result})
+
+
 
 @app.route('/api/directors', methods=['GET'])
 def get_directors():
     # Get query parameters for  sorting
     sort_by = request.args.get('sort_by')
+    director_name = request.args.get('director_name')
     # Define the appropriate query
     query = 'SELECT name FROM directors'
-
+    if director_name:
+        query += f" WHERE name LIKE '%{director_name}%'"
     if sort_by:
+        if sort_by=='director_name':
+            sort_by='name'
         query += f" ORDER BY {sort_by}"
-    
     query+=';'
     
     # Send the query to the execute_query function
     result = execute_API_query(query)
-    # json_data = json.dumps(result, indent=4)
-    return jsonify(result)
+
+    # Send the API call response
+    return jsonify({"status": 200, "result": result})
+
+
 
 def execute_API_query(query):
     # Establish a new database connection and cursor for each request
@@ -94,22 +109,22 @@ def execute_API_query(query):
             raise NoSuchColumnException("The specified column doesn't exist.")
         raise Exception("Database error occurred.")
     finally:
-        # Close the cursor and connection in a 'finally' block to ensure it's always closed
+        # Close the cursor and connection in a 'finally' block to ensure it's closed
         cursor.close()
         connection.close()
 
 
 @app.errorhandler(UnknownArgumentException)
 def handle_unknown_arg_error(e):
-    return jsonify({"error": str(e)}), 400
+    return jsonify({"status": 400, "error": str(e)}), 400
 
 @app.errorhandler(NoSuchColumnException)
 def handle_no_such_column_error(e):
-    return jsonify({"error": str(e)}), 400
+    return jsonify({"status": 400, "error": str(e)}), 400
 
 @app.errorhandler(Exception)
 def handle_generic_error(e):
-    return jsonify({"error": str(e)}), 500
+    return jsonify({"status": 500, "error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
