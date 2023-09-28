@@ -2,8 +2,22 @@
 <html>
 <head>
     <title>IMDB SQL Interface</title>
+    <style>
+        body {
+            background-color: rgb(219, 165, 6);
+            color: black; /* Change the text color to white for better visibility on blue background */
+            font-family: Arial, sans-serif; /* For a more readable text */
+        }
+
+        #imdb-logo {
+            max-width: 150px; /* You can adjust this as needed */
+            display: block;
+            margin: 20px auto; /* Center the logo */
+        }
+    </style>
 </head>
 <body>
+    <img id="imdb-logo" src="https://1000logos.net/wp-content/uploads/2023/01/IMDb-logo.png" alt="IMDb Logo">
     <h1>IMDB SQL Interface</h1>
     <form id="sql-form">
         <textarea name="query" rows="13" cols="50" placeholder="Enter your SQL query here..."></textarea><br>
