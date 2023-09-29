@@ -10,7 +10,7 @@ app = Flask(__name__)
 class UnknownArgumentException(Exception):
     pass
 
-class NoSuchColumnException(Exception):
+class BadQueryException(Exception):
     pass
 
 
@@ -85,9 +85,16 @@ def get_movies():
 
 @app.route('/api/directors', methods=['GET'])
 def get_directors():
+    allowed_args = ['director_name', 'movie_title', 'sort_by']
+    # Check for any unknown arguments
+    for arg in request.args.keys():
+        if arg not in allowed_args:
+            raise UnknownArgumentException(f"Unknown argument '{arg}' provided.")
+        
     # Get query parameters for  sorting
     sort_by = request.args.get('sort_by')
     director_name = request.args.get('director_name')
+    
     # Define the appropriate query
     query = 'SELECT name FROM directors'
     if director_name:
@@ -119,15 +126,11 @@ def execute_query(query, output_format='api'):
                 return [dict(zip(columns, row)) for row in result]
             elif output_format == 'interface':
                 return {'data': result, 'columns': columns}
-            else:
-                raise ValueError(f"Unsupported output_format: {output_format}")
         else:
             connection.commit()
             return {'message': 'Query executed successfully.'}
     except sqlite3.OperationalError as e:
-        if "no such column" in str(e):
-            raise NoSuchColumnException("The specified column doesn't exist.")
-        raise Exception("Database error occurred.")
+        raise BadQueryException(str(e))
     finally:
         cursor.close()
         connection.close()
@@ -137,9 +140,9 @@ def execute_query(query, output_format='api'):
 def handle_unknown_arg_error(e):
     return jsonify({"status": 400, "error": str(e)}), 400
 
-@app.errorhandler(NoSuchColumnException)
+@app.errorhandler(BadQueryException)
 def handle_no_such_column_error(e):
-    return jsonify({"status": 400, "error": str(e)}), 400
+    return jsonify({"status": 404, "error": str(e)}), 404
 
 @app.errorhandler(Exception)
 def handle_generic_error(e):

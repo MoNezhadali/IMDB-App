@@ -70,11 +70,15 @@
             function handleAjaxError(jqXHR, textStatus, errorThrown) {
                 // Handle any client-side or network errors
                 let content = '<p>Incorrect or unexpected SQL request</p>';
-                if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
-                    content = `<p>${jqXHR.responseJSON.message}</p>`;
+                
+                // Check for the "error" field in the response
+                if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
+                    content = `<p>${jqXHR.responseJSON.error}</p>`;
                 }
+                
                 $(RESULT_SELECTOR).html(content);
             }
+
 
             function buildTable(response) {
                 let tableHeader = response.columns.map(column => `<th>${column}</th>`).join('');
