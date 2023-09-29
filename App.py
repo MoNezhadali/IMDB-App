@@ -13,7 +13,8 @@ class UnknownArgumentException(Exception):
 class BadQueryException(Exception):
     pass
 
-
+class SQLSyntaxException(Exception):
+    pass
 
 # Define the sqlite database file
 DATABASE = os.path.abspath(os.path.join(os.path.dirname(__file__),'movie.sqlite'))
@@ -94,7 +95,7 @@ def get_directors():
     # Get query parameters for  sorting
     sort_by = request.args.get('sort_by')
     director_name = request.args.get('director_name')
-    
+
     # Define the appropriate query
     query = 'SELECT name FROM directors'
     if director_name:
@@ -130,7 +131,12 @@ def execute_query(query, output_format='api'):
             connection.commit()
             return {'message': 'Query executed successfully.'}
     except sqlite3.OperationalError as e:
-        raise BadQueryException(str(e))
+        if 'table' in str(e) or 'column' in str(e):
+            raise BadQueryException(str(e))
+        elif 'syntax' in str(e):
+            raise SQLSyntaxException(str(e))
+        raise Exception(e)
+
     finally:
         cursor.close()
         connection.close()
@@ -140,13 +146,21 @@ def execute_query(query, output_format='api'):
 def handle_unknown_arg_error(e):
     return jsonify({"status": 400, "error": str(e)}), 400
 
+@app.errorhandler(SQLSyntaxException)
+def handle_sql_syntat_error(e):
+    return jsonify({"status": 400, "error": f"Your SQL query has syntax error! {str(e)}"}), 400
+
+@app.errorhandler(404)
+def handle_404_error(e):
+    return jsonify({"status": 404, "error": str(e)}), 404
+
 @app.errorhandler(BadQueryException)
 def handle_no_such_column_error(e):
     return jsonify({"status": 404, "error": str(e)}), 404
 
 @app.errorhandler(Exception)
 def handle_generic_error(e):
-    return jsonify({"status": 500, "error": str(e)}), 500
+    return jsonify({"status": 500, "error": f"Unexpected Error! {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
